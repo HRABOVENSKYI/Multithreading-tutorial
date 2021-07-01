@@ -1,26 +1,47 @@
 package org.example;
 
-class Printer implements Runnable { // We can also extend class Thread, but this way is recommended
-    @Override
-    public void run() {
-        for (int i = 0; i < 10; i++) {
-            System.out.println(Thread.currentThread().getName() + " " + i);
+class Printer {
+    // synchronized forbids other threads to access this method while it is used by one thread
+    synchronized void printDocuments(int numOfCopies, String docName) {
+        for (int i = 0; i < numOfCopies; i++) {
+            System.out.println("Printing " + docName + " #" + i + " " + Thread.currentThread().getName());
         }
     }
 }
 
+class MyThread extends Thread {
+
+    Printer printer;
+
+    MyThread(Printer printer) {
+        this.printer = printer;
+    }
+
+    @Override
+    public void run() {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        printer.printDocuments(100, "Крижане серце");
+    }
+}
+
 public class App {
+
     public static void main(String[] args) {
 
-        // Printing happens simultaneously all threads. Outputs are mixed.
+        System.out.println("=== Application started ===");
 
-        Thread thread1 = new Thread(new Printer()); // Thread-0
-        Thread thread2 = new Thread(new Printer()); // Thread-1
-        Thread thread3 = new Thread(new Printer()); // Thread-2
-        Thread thread4 = new Thread(new Printer()); // Thread-3
-        thread1.start(); // logging to console
-        thread2.start(); // logging to console
-        thread3.start(); // logging to console
-        thread4.start(); // logging to console
+        Printer printer = new Printer();
+
+        // logging is separate, because printDocuments() is synchronized method
+        MyThread myThread1 = new MyThread(printer);
+        MyThread myThread2 = new MyThread(printer);
+        myThread1.start(); // logging from Thread-0
+        myThread2.start(); // logging from Thread-1
+
+        System.out.println("=== Application finished ===");
     }
 }
